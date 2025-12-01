@@ -2,10 +2,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
+
+#define DEBUG
 
 int main(void)
 {
+  srand(time(NULL));
+  
   // load
+  float offset = 0.0;
   char **messages = NULL;
   int messageCount = 0;
   
@@ -45,7 +51,13 @@ int main(void)
   
   int currentMessage = 0;
   
-  Font fontTtf = LoadFontEx("assets/riot.ttf", 400, 0, 0);
+  Font fonts[3];
+  fonts[0] = LoadFontEx("assets/molot.otf", 350, 0, 0);
+  fonts[1] = LoadFontEx("assets/kontra.ttf", 350, 0, 0);
+  fonts[2] = LoadFontEx("assets/fyodor.ttf", 350, 0, 0);
+  
+  int currentFont = rand() % 3;
+  
   SetTargetFPS(30);
   
   while (!WindowShouldClose())
@@ -53,19 +65,26 @@ int main(void)
     // update
     if (IsKeyPressed(KEY_SPACE)) {
       currentMessage = (currentMessage + 1) % messageCount;
+      currentFont = rand() % 3;
     }
     
     const char *msg = messages[currentMessage];
+    Font fontTtf = fonts[currentFont];
     
     // draw
     BeginDrawing();
     ClearBackground((Color){ 0, 0, 0, 0 });
     Vector2 textSize = MeasureTextEx(fontTtf, msg, (float)fontTtf.baseSize, 0);
     Vector2 position = {
-      (screenWidth - textSize.x) * 0.5f,
+      (screenWidth - textSize.x + offset) * 0.5f,
       (screenHeight - textSize.y) * 0.5f,
     };
-    DrawTextEx(fontTtf, msg, position, (float)fontTtf.baseSize, 2, RED);
+    DrawTextEx(fontTtf, msg, position, (float)fontTtf.baseSize, 0, RED);
+#ifdef DEBUG
+  DrawRectangleLines(position.x, position.y, textSize.x, textSize.y, GREEN);
+  DrawLine(screenWidth/2 - 50, screenHeight/2, screenWidth/2 + 50, screenHeight/2, BLUE);
+  DrawLine(screenWidth/2, screenHeight/2 - 50, screenWidth/2, screenHeight/2 + 50, BLUE);
+#endif
     EndDrawing();
   }
   
@@ -74,8 +93,9 @@ int main(void)
     free(messages[i]);
   }
   free(messages);
-  
-  UnloadFont(fontTtf);
+  for (int i = 0; i < 3; i++) {
+    UnloadFont(fonts[i]);
+  }
   CloseWindow();
   
   return 0;
